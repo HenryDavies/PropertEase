@@ -7,6 +7,7 @@ const start = 0;
 const end = 10;
 let counter = 0;
 let saveCounter = 0;
+let duplicateCounter = 0;
 
 mongoose.connect(databaseUrl);
 
@@ -30,11 +31,12 @@ for (var i = start; i < end; i++) {
               if (err) return console.log(err);
               saveCounter++;
               counter++;
-              return console.log(`${listing.listing_id} saved, ${counter}, ${saveCounter}`);
+              return console.log(`${listing.listing_id} saved, Total: ${counter}, Saved: ${saveCounter}, Duplicates: ${duplicateCounter}`);
             });
           } else {
             counter++;
-            console.log(`already exists in DB, ${counter}`);
+            duplicateCounter++;
+            console.log(`already exists in DB, Total: ${counter}, Saved: ${saveCounter}, Duplicates: ${duplicateCounter}`);
           }
         })
         .catch(err => {

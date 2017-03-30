@@ -23,7 +23,7 @@ mongoose.connect(databaseUrl);
 const download = (uri, filename, callback) => {
   request.head({ uri: uri }, function(err, res){
     if (err) {
-      console.log(err)
+      console.log(err);
     } else {
       console.log('content-type:', res.headers['content-type']);
       console.log('content-length:', res.headers['content-length']);
@@ -44,9 +44,10 @@ function editProperty(listing, callback) {
   if (listing.price == 0) {
     Property.remove({ listing_id: listing.listing_id, date: listing.date }, err => {
       if (err) {
-        console.log(err);
+        console.log('property removal error',err);
+        callback();
       } else {
-        console.log('Property removed');
+        console.log('property removed');
         callback();
       }
     });
@@ -57,38 +58,32 @@ function editProperty(listing, callback) {
           console.log('cloud vision error:', err);
           callback();
         } else if (text[0] && text) {
-          listing.floorPlanText = text[0];
-          listing.parsedText = listing.floorPlanText
-          .split(',').join('')    // thousand separator
-          .split('\n').join(' ')
-          .split('(').join(' ')
-          .split(')').join(' ')
-          .split('/').join(' ')
-          .split('-').join(' ');  // equals signs often register as dashes
+          listing.parsedText = parseText(text[0]);
           listing.array = [];
           listing.finalArray = [];
           delete listing.squareFeet;
           listing.pricePerSquareFoot = 'NA';
           squareFeetArray.forEach((value, index) => {
             if (listing.parsedText.toUpperCase().includes(value)) {
-              listing.array[index] = listing.parsedText.toUpperCase().split(value);
-              listing.array[index].forEach((value, index1) => {
-                listing.array[index][index1] = parseInt(value.split(' ')[value.split(' ').length -2]);
-                if (isNaN(listing.array[index][index1])) {
-                  listing.array[index][index1] = 0;
+              listing.array.push(listing.parsedText.toUpperCase().split(value));
+              listing.array[listing.array.length - 1].forEach((value, index1) => {
+                listing.array[listing.array.length - 1][index1] = parseInt(value.split(' ')[value.split(' ').length -2]);
+                if (isNaN(listing.array[listing.array.length - 1][index1])) {
+                  listing.array[listing.array.length - 1][index1] = 0;
                 }
               });
-              // console.log('yes', value);
-              listing.array[index].splice(listing.array[index].length-1, 1);
+              listing.array[listing.array.length - 1].splice(listing.array[index].length-1, 1);
             }
           });
           listing.array.forEach((array, index) => {
+            const maxValue = Math.max(...listing.array[index]);
             if (listing.array[index]) {
-              listing.finalArray.push(Math.max.apply(null,listing.array[index]));
+              listing.finalArray.push(maxValue);
             }
           });
-          if (isFinite(Math.max.apply(null, listing.finalArray)) && Math.max.apply(null, listing.finalArray) !== null && Math.max.apply(null, listing.finalArray) !== 0 ) {
-            listing.squareFeet = Math.max.apply(null, listing.finalArray);
+          const maxValue = Math.max(...listing.finalArray);
+          if (isFinite(maxValue) && maxValue ) {
+            listing.squareFeet = maxValue;
             listing.pricePerSquareFoot = listing.price / listing.squareFeet;
           }
           console.log(listing.finalArray,listing.squareFeet);
@@ -110,6 +105,17 @@ function sortByKey(array, key) {
     var x = a[key]; var y = b[key];
     return ((x < y) ? 1 : ((x > y) ? -1 : 0));
   });
+}
+
+
+function parseText(text) {
+  return text
+  .split(',').join('')    // thousand separator
+  .split('\n').join(' ')
+  .split('(').join(' ')
+  .split(')').join(' ')
+  .split('/').join(' ')
+  .split('-').join(' ');  // equals signs often register as dashes
 }
 
 
