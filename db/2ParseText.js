@@ -56,9 +56,10 @@ function editProperty(listing, callback) {
       vision.detectText(path.join(__dirname, `../images/${listing.listing_id}.png`), (err, text) => {
         if (err) {
           console.log('cloud vision error:', err);
-          callback();
+          fs.unlink(path.join(__dirname, `../images/${listing.listing_id}.png`), callback);
         } else if (text[0] && text) {
-          listing.parsedText = parseText(text[0]);
+          listing.floorPlanText = text[0];
+          listing.parsedText = parseText(listing.floorPlanText);
           listing.array = [];
           listing.finalArray = [];
           delete listing.squareFeet;
@@ -72,7 +73,7 @@ function editProperty(listing, callback) {
                   listing.array[listing.array.length - 1][index1] = 0;
                 }
               });
-              listing.array[listing.array.length - 1].splice(listing.array[index].length-1, 1);
+              listing.array[listing.array.length - 1].splice(listing.array[listing.array.length - 1].length-1, 1);
             }
           });
           listing.array.forEach((array, index) => {
@@ -91,9 +92,9 @@ function editProperty(listing, callback) {
             if (err) return console.log(err);
             counter++;
             console.log(`${listing.listing_id} saved, ${counter}`);
-            callback();
+            fs.unlink(path.join(__dirname, `../images/${listing.listing_id}.png`), callback);
           });
-        } else callback();
+        } else fs.unlink(path.join(__dirname, `../images/${listing.listing_id}.png`), callback);
       });
     });
   } else callback();

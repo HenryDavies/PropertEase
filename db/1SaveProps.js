@@ -13,7 +13,7 @@ mongoose.connect(databaseUrl);
 
 for (var i = start; i < end; i++) {
   const options = {
-    uri: `http://api.zoopla.co.uk/api/v1/property_listings.js?area=London&order_by=age&page_size=100&page_number=${i}&listing_status=sale&api_key=gfya4wfdf8ypa8xemktvhx6h`,
+    uri: `http://api.zoopla.co.uk/api/v1/property_listings.js?area=London&order_by=age&page_size=100&page_number=${i}&listing_status=sale&include_sold=1&api_key=gfya4wfdf8ypa8xemktvhx6h`,
     headers: {
       'User-Agent': 'Request-Promise',
       'Connection': 'keep-alive'
