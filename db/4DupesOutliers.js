@@ -19,9 +19,7 @@ Property.find({}, (err, data) => {
   let saveCount = 0;
   let removeCount = 0;
   let duplicateCount = 0;
-  console.log(data.length);
   data.forEach((listing, index) => {
-    console.log(listing.status);
     if (listing.scrapeSquareFeet === 'NA') {
       if (listing.squareFeet < 250 || listing.squareFeet > 5000) {
         Property.remove({ listing_id: listing.listing_id, date: listing.date }, err => {

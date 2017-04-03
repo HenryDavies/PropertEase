@@ -25,7 +25,9 @@ const propertySchema = new mongoose.Schema({
   finalArray: { },
   priceHistory: { type: Array },
   parsedText: { },
-  scrapeSquareFeet: { }
+  scrapeSquareFeet: { },
+  post_code: { type: String},
+  post_code_area: { type: String}
 }, {
   timestamps: true
 });
