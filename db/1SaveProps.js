@@ -4,13 +4,16 @@ const databaseUrl = config.db;
 const Property = require('../models/property');
 const rp = require('request-promise');
 const start = 0;
-const end = 1;
+const end = 100;
 let counter = 0;
 let saveCounter = 0;
 let duplicateCounter = 0;
 
 mongoose.connect(databaseUrl);
 
+////////////////
+Property.collection.drop();
+////////////////
 
 // &include_sold=1 to include sold
 for (var i = start; i < end; i++) {
@@ -29,16 +32,12 @@ for (var i = start; i < end; i++) {
         listing.date = Date.parse(listing.last_published_date);
         Property.count({ listing_id: listing.listing_id, date: Date.parse(listing.last_published_date) }, (err, count) => {
           if (count === 0) {
-            getPostCode(listing.latitude,listing.longitude, postCode => {
-              listing.post_code = postCode;
-              listing.post_code_area = postCode.split(' ')[0];
-              console.log(listing.post_code_area);
-              Property.create(listing, (err, listing) => {
-                if (err) return console.log(err);
-                saveCounter++;
-                counter++;
-                return console.log(`${listing.listing_id} saved, Total: ${counter}, Saved: ${saveCounter}, Duplicates: ${duplicateCounter}`);
-              });
+            Property.create(listing, (err, listing) => {
+              if (err) return console.log(err);
+              console.log(listing.outcode);
+              saveCounter++;
+              counter++;
+              return console.log(`${listing.listing_id} saved, Total: ${counter}, Saved: ${saveCounter}, Duplicates: ${duplicateCounter}`);
             });
           } else {
             counter++;
@@ -51,20 +50,8 @@ for (var i = start; i < end; i++) {
         });
       });
     });
-  },  (i - start) * 1000);
+  },  (i - start) * 42000);
 }
 
 // (i - start) * 420000 - delay if downloading more than 1000 (10 pages)
 // 1000 otherwise
-
-function getPostCode(lat,lng,callback) {
-  const options = {
-    uri: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyAzPfoyVbxG2oz378kpMkMszn2XtZn-1SU`,
-    json: true
-  };
-  rp(options)
-  .then(data => {
-    const postCode = (data.results[0].address_components[data.results[0].address_components.length - 1].long_name);
-    callback(postCode);
-  });
-}

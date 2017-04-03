@@ -40,7 +40,6 @@ const download = (uri, filename, callback) => {
 
 // GET SQUARE FEET DATA FROM FLOOR PLANS AND SAVE TO DB
 function editProperty(listing, callback) {
-  console.log(listing.pricePerSquareFoot);
   if (listing.price == 0) {
     Property.remove({ listing_id: listing.listing_id, date: listing.date }, err => {
       if (err) {
@@ -121,7 +120,8 @@ function parseText(text) {
 
 
 Property.find({}, (err, data) => {
-  const shortArray = sortByKey(data,'date').slice(0,3000);
+  const shortArray = sortByKey(data,'date').slice(0,5000);
+  // const shortArray = sortByKey(data,'date').slice(5000);
   async.eachLimit(shortArray, PARALLEL_LIMIT, editProperty, function(err) {
     console.log('reached');
     if (err) console.log(err);
