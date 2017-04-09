@@ -27,6 +27,8 @@ function dealWithListingsAlreadyInDB(listings, callback) {
   const filteredListings = [];
   const numberOfListings = listings.length;
   let listingsChecked = 0;
+  let duplicateCount = 0;
+  let updatedRecordCount = 0;
   listings.forEach(listing => {
     Property.find({listing_id: listing.listing_id}, (err, listingsAlreadyInDB) => {
       listingsChecked++;
@@ -37,10 +39,16 @@ function dealWithListingsAlreadyInDB(listings, callback) {
         if (duplicates[0].date !== listing.date ) {
           importPriceHistory(listing, duplicates, (listing) => {
             filteredListings.push(listing);
+            updatedRecordCount++;
           });
-        } else console.log('already in DB');
+        } else {
+          duplicateCount++;
+        }
       }
-      if (listingsChecked === numberOfListings) callback(null, filteredListings);
+      if (listingsChecked === numberOfListings) {
+        console.log(`${duplicateCount + updatedRecordCount} listings already in DB: ${duplicateCount} duplicates (removed from array), ${updatedRecordCount} updated listings (imported price history)`);
+        callback(null, filteredListings);
+      }
     });
   });
 
@@ -83,11 +91,12 @@ function getSquareFootDataForAllListings(listings, callback) {
   });
 
   function getSquareFootData(listing, callback) {
-    console.log(`Finding square foot data for listing ${listingsChecked}`);
     listingsChecked++;
+    console.log(`Finding square foot data for listing ${listingsChecked}`);
     if (floorPlanExists(listing)) {
       scrapeSqFtFromListingURL(listing.details_url.split('&utm_medium=api')[0], (scrapedSquareFeet) => {
         if (scrapedSquareFeet) {
+          listing.scraped = true;
           listing.squareFeet = scrapedSquareFeet;
           listing.pricePerSquareFoot = parseInt(listing.price / listing.squareFeet);
           console.log(`Scraped: SqFt ${scrapedSquareFeet}, £/SqFt ${listing.pricePerSquareFoot}`);
@@ -207,13 +216,13 @@ function removeOutliers(listings, callback) {
     if (notOutlier(listing)) filteredListings.push(listing);
     else {
       outlierCount++;
-      console.log(`Outlier ${outlierCount} removed`);
     }
   });
+  console.log(`${outlierCount} outliers removed. ${filteredListings.length} listings to be saved in DB.`);
   callback(null, filteredListings);
 
   function notOutlier(listing) {
-    return !(listing.squareFeet < 250 || listing.squareFeet > 5000 || listing.pricePerSquareFoot < 300 || listing.pricePerSquareFoot > 1700);
+    return (listing.scraped || !(listing.squareFeet < 250 || listing.squareFeet > 5000 || listing.pricePerSquareFoot < 300 || listing.pricePerSquareFoot > 1700));
   }
 }
 
@@ -224,8 +233,10 @@ function saveListingsToDB(listings, callback) {
     Property.create(listing, (err) => {
       listingsSaved++;
       if (err) return console.log(err);
-      console.log(`listing ${listingsSaved} saved`);
-      if (listingsSaved === numberOfListings) callback(null);
+      if (listingsSaved === numberOfListings) {
+        console.log(`${listingsSaved} listings saved to DB`);
+        callback(null);
+      }
     });
   });
 }

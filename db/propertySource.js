@@ -1,5 +1,5 @@
 const httpRequestPromise = require('request-promise');
-const listingsToBeSaved = 1000;
+const listingsToBeSaved = 100;
 const listingsPerHttpRequest = 100;
 const apiKey = 'gfya4wfdf8ypa8xemktvhx6h';
 const listingsArray = [];
@@ -18,7 +18,7 @@ function getAllPropertyListings(callback) {
     .then(data => {
       addListingsToArray(data.listing, callback);
       if (listingsArray.length >= listingsToBeSaved) {
-        console.log('passing to next function');
+        console.log(`${listingsToBeSaved} got from Zoopla`);
         callback(null, listingsArray.slice(0, listingsToBeSaved));
       }
     })
